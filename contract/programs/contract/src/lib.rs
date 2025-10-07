@@ -13,4 +13,21 @@ pub mod contract {
 }
 
 #[derive(Accounts)]
-pub struct Initialize {}
+pub struct Initialize<'info> {
+    #[account(init, payer = signer, space = 456 + 8 )]
+    pub donation_message: Account<'info, DonationMessage>,
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[account]
+pub struct DonationMessage {
+    pub sender: Pubkey,
+    pub receiver: Pubkey,
+    pub mint: Pubkey,   
+    pub amount: u64,
+    pub ts: i64,
+    pub sender_name: String,
+    pub message: String,
+}
