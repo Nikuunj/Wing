@@ -60,6 +60,12 @@ pub struct DonationMessage {
 }
 
 #[account]
+pub struct UserProfile {
+    pub name: String,
+    pub about: String
+}
+
+#[account]
 pub struct UserVault {
     pub owner: Pubkey,
     pub mint: Pubkey,
@@ -70,6 +76,22 @@ pub struct UserVault {
 pub struct SolVault {
     pub bump: u8,
     pub receiver: Pubkey,
+}
+
+#[derive(Accounts)]
+pub strunt InitProfile<'info> {
+    #[account(
+        init, 
+        payer = signer, 
+        spage = 8 + 24 + 256,
+        seeds = [b"sol-vault", signer.key().as_ref()],
+        bump
+    )]
+    pub user_profile: Account<'info, UserProfile>,
+
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
