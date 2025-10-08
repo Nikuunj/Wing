@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_spl::token::{Token, TokenAccount, Mint};
 
 declare_id!("3nR3mRJm7TaWPeA7rScQ8Mbo1eNMpJcE8KdbNQidq2rh");
 
@@ -8,6 +9,26 @@ pub mod contract {
 
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
         msg!("Greetings from: {:?}", ctx.program_id);
+        Ok(())
+    }
+
+    pub fn init_receiver_state() -> Result<()> {
+        Ok(())
+    }
+
+    pub fn donate_sol(ctx: Context<DonateSol>) -> Result<()> {
+        Ok(())
+    }
+
+    pub fn donate_spl(ctx: Context<DonateSpl>) -> Result<()> {
+        Ok(())
+    }
+
+    pub fn claim_sol() -> Result<()> {
+        Ok(())
+    }
+
+    pub fn clain_spl() -> Result<()> {
         Ok(())
     }
 }
@@ -30,4 +51,74 @@ pub struct DonationMessage {
     pub ts: i64,
     pub sender_name: String,
     pub message: String,
+}
+
+#[account]
+pub struct UserVault {
+    pub owner: Pubkey,
+    pub mint: Pubkey,
+    pub amount: u64
+}
+
+#[derive(Accounts)]
+pub struct InitReceiverState<'info> {
+    #[account(init, payer = signer, space = 8 + 32 + 32 + 8)]
+    pub receiver_state: Account<'info, UserVault>,
+    pub receiver: SystemAccount<'info>,
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct DonateSol<'info> {
+    #[account(mut)]
+    pub donor: Signer<'info>,
+
+    #[account(mut)]
+    pub receiver: SystemAccount<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"sol-vault", receiver.key().as_ref()],
+        bump
+    )]
+    pub sol_vault: SystemAccount<'info>,
+
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct DonateSpl<'info> {
+    #[account(mut)]
+    pub donor: Signer<'info>,
+
+    #[account(mut)]
+    pub receiver: SystemAccount<'info>,
+
+    #[account(mut)] 
+    pub user_token_account: Account<'info, TokenAccount>, 
+
+    #[account(init_if_needed, 
+        payer = user, 
+        seeds = [b"vault", mint.key().as_ref(), receiver.key().as_ref()], 
+        bump, 
+        token::mint = mint, 
+        token::authority = vault
+    )] 
+    pub vault_token_account: Account<'info, TokenAccount>,
+
+    #[account(
+        init_if_needed,
+        payer = user,
+        space = 8 + 32 + 32 + 8,
+        seeds = [b"user-vault", receiver.key().as_ref(), mint.key().as_ref()],
+        bump
+    )]
+    pub user_vault: Account<'info, UserVault>,
+
+    pub vault: UncheckedAccount<'info>,
+    pub mint: Account<'info, Mint>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
 }
