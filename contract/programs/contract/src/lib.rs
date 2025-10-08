@@ -17,6 +17,12 @@ pub mod contract {
     }
 
     pub fn donate_sol(ctx: Context<DonateSol>) -> Result<()> {
+        let sol_vault = &mut ctx.accounts.sol_vault;
+
+        if sol_vault.bump == 0 {
+            sol_vault.bump = *ctx.bumps.get("sol_vault").unwrap();
+            sol_vault.receiver = ctx.accounts.receiver.key(); 
+        }
         Ok(())
     }
 
@@ -60,6 +66,12 @@ pub struct UserVault {
     pub amount: u64
 }
 
+#[account]
+pub struct SolVault {
+    pub bump: u8,
+    pub receiver: Pubkey,
+}
+
 #[derive(Accounts)]
 pub struct InitReceiverState<'info> {
     #[account(init, payer = signer, space = 8 + 32 + 32 + 8)]
@@ -79,11 +91,22 @@ pub struct DonateSol<'info> {
     pub receiver: SystemAccount<'info>,
 
     #[account(
-        mut,
+        init_if_needed,
+        payer = donor,
+        space = 0,
         seeds = [b"sol-vault", receiver.key().as_ref()],
         bump
     )]
-    pub sol_vault: SystemAccount<'info>,
+    pub sol_vault: Account<'info, SolVault>,
+
+    #[account(
+        init_if_needed,
+        payer = donor,
+        space = 8 + 32 + 32 + 8,
+        seeds = [b"user-vault", receiver.key().as_ref()],
+        bump
+    )]
+    pub user_vault: Account<'info, UserVault>,
 
     pub system_program: Program<'info, System>,
 }
@@ -100,8 +123,8 @@ pub struct DonateSpl<'info> {
     pub user_token_account: Account<'info, TokenAccount>, 
 
     #[account(init_if_needed, 
-        payer = user, 
-        seeds = [b"vault", mint.key().as_ref(), receiver.key().as_ref()], 
+        payer = donor, 
+        seeds = [b"spl-vault", mint.key().as_ref(), receiver.key().as_ref()], 
         bump, 
         token::mint = mint, 
         token::authority = vault
@@ -110,7 +133,7 @@ pub struct DonateSpl<'info> {
 
     #[account(
         init_if_needed,
-        payer = user,
+        payer = donor,
         space = 8 + 32 + 32 + 8,
         seeds = [b"user-vault", receiver.key().as_ref(), mint.key().as_ref()],
         bump
