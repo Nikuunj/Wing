@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_lang::system_program::{transfer, Transfer as SolTransfer };
 use anchor_spl::token::{self, Token, TokenAccount, Mint, Transfer};
 
 declare_id!("3nR3mRJm7TaWPeA7rScQ8Mbo1eNMpJcE8KdbNQidq2rh");
@@ -21,13 +22,23 @@ pub mod contract {
     //     Ok(())
     // }
 
-    pub fn donate_sol(ctx: Context<DonateSol>) -> Result<()> {
+    pub fn donate_sol(ctx: Context<DonateSol>, amount: u64) -> Result<()> {
+        require!(amount > 0, ErrorCode::InvalidNumericConversion);
         let sol_vault = &mut ctx.accounts.sol_vault;
-
         if sol_vault.bump == 0 {
             sol_vault.bump = ctx.bumps.sol_vault;
             sol_vault.receiver = ctx.accounts.receiver.key(); 
         }
+
+        let cpi_context = CpiContext::new(
+            ctx.accounts.system_program.to_account_info(), 
+            SolTransfer {
+                from: ctx.accounts.donor.to_account_info(),
+                to: ctx.accounts.sol_vault.to_account_info()
+            }
+        );
+
+        transfer(cpi_context, amount)?;
         Ok(())
     }
 
@@ -61,7 +72,7 @@ pub mod contract {
 pub struct DonationMessage {
     pub sender: Pubkey,
     pub receiver: Pubkey,
-    pub mint: Pubkey,   
+    pub mint: Pubkey,
     pub amount: u64,
     pub ts: i64,
     pub sender_name: String,
@@ -133,20 +144,11 @@ pub struct DonateSol<'info> {
     #[account(
         init_if_needed,
         payer = donor,
-        space = 0,
+        space = 8 + 1 + 32,
         seeds = [b"sol-vault", receiver.key().as_ref()],
         bump
     )]
     pub sol_vault: Account<'info, SolVault>,
-
-    #[account(
-        init_if_needed,
-        payer = donor,
-        space = 8 + 32 + 32 + 8,
-        seeds = [b"user-vault", receiver.key().as_ref()],
-        bump
-    )]
-    pub user_vault: Account<'info, UserVault>,
 
     pub system_program: Program<'info, System>,
 }
