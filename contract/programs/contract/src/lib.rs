@@ -1,3 +1,4 @@
+use anchor_lang::prelude::borsh::de;
 use anchor_lang::prelude::*;
 use anchor_lang::system_program::{transfer, Transfer as SolTransfer };
 use anchor_spl::token::{self, Token, TokenAccount, Mint, Transfer};
@@ -16,14 +17,8 @@ pub mod contract {
         Ok(())
     }
 
-    // pub fn init_receiver_state(ctx: Context<DonateSol>) -> Result<()> {
-    //     msg!("Greetings from: {:?}", ctx.program_id);
-
-    //     Ok(())
-    // }
-
     pub fn donate_sol(ctx: Context<DonateSol>, amount: u64) -> Result<()> {
-        require!(amount > 0, ErrorCode::InvalidNumericConversion);
+        require!(amount > 0, CustomError::InvalidAmount);
         let sol_vault = &mut ctx.accounts.sol_vault;
         if sol_vault.bump == 0 {
             sol_vault.bump = ctx.bumps.sol_vault;
@@ -43,7 +38,7 @@ pub mod contract {
     }
 
     pub fn donate_spl(ctx: Context<DonateSpl>, amount: u64) -> Result<()> {
-        require!(amount > 0, ErrorCode::InvalidNumericConversion);
+        require!(amount > 0, CustomError::InvalidAmount);
         let cpi_accounts = Transfer {
             from: ctx.accounts.donor_token_account.to_account_info(),
             to: ctx.accounts.vault_token_account.to_account_info(),
@@ -59,9 +54,11 @@ pub mod contract {
         Ok(())
     }
 
-    // pub fn claim_sol() -> Result<()> {
-    //     Ok(())
-    // }
+    pub fn claim_sol(ctx: Context<WithdrawSol>, amount: u64) -> Result<()> {
+        let balance = ctx.accounts.sol_vault.get_lamports();
+        require!(amount <= balance, CustomError::InsufficientBalance);
+        Ok(())
+    }
 
     // pub fn clain_spl() -> Result<()> {
         // Ok(())
@@ -166,8 +163,8 @@ pub struct DonateSpl<'info> {
 
     #[account(init_if_needed, 
         payer = donor,
-        seeds = [b"spl-vault", mint.key().as_ref(), receiver.key().as_ref()], 
-        bump, 
+        seeds = [b"spl-vault", receiver.key().as_ref(), mint.key().as_ref()], 
+        bump,
         token::mint = mint,
         token::authority = vault
     )]
@@ -188,4 +185,28 @@ pub struct DonateSpl<'info> {
     pub mint: Account<'info, Mint>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
+pub struct  WithdrawSol<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"sol-vault", signer.key().as_ref()],
+        bump
+    )]
+    pub sol_vault: Account<'info, SolVault>,
+
+    pub system_program: Program<'info, System>,
+}
+
+#[error_code]
+pub enum CustomError {
+    #[msg("Insufficient balance in vault")]
+    InsufficientBalance,
+
+    #[msg("Invalid Amount")]
+    InvalidAmount
 }
