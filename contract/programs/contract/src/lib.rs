@@ -1,10 +1,11 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount, Mint};
+use anchor_spl::token::{self, Token, TokenAccount, Mint, Transfer};
 
 declare_id!("3nR3mRJm7TaWPeA7rScQ8Mbo1eNMpJcE8KdbNQidq2rh");
 
 #[program]
 pub mod contract {
+
     use super::*;
 
     pub fn initialize(ctx: Context<InitProfile>, name: String, about: String) -> Result<()> {
@@ -30,8 +31,20 @@ pub mod contract {
         Ok(())
     }
 
-    pub fn donate_spl(ctx: Context<DonateSpl>) -> Result<()> {
-        // let a = ctx.account.receiver.key().as_ref;
+    pub fn donate_spl(ctx: Context<DonateSpl>, amount: u64) -> Result<()> {
+        require!(amount > 0, ErrorCode::InvalidNumericConversion);
+        let cpi_accounts = Transfer {
+            from: ctx.accounts.donor_token_account.to_account_info(),
+            to: ctx.accounts.vault_token_account.to_account_info(),
+            authority: ctx.accounts.donor.to_account_info(),
+        };
+        let cpi_program = ctx.accounts.token_program.to_account_info();
+        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+
+        token::transfer(cpi_ctx, amount)?;
+        ctx.accounts.user_vault.owner = ctx.accounts.receiver.key();
+        ctx.accounts.user_vault.mint = ctx.accounts.mint.key();
+        ctx.accounts.user_vault.amount = ctx.accounts.vault_token_account.amount;
         Ok(())
     }
 
@@ -42,15 +55,6 @@ pub mod contract {
     // pub fn clain_spl() -> Result<()> {
         // Ok(())
     // }
-}
-
-#[derive(Accounts)]
-pub struct Initialize<'info> {
-    #[account(init, payer = signer, space = 456 + 8 )]
-    pub donation_message: Account<'info, DonationMessage>,
-    #[account(mut)]
-    pub signer: Signer<'info>,
-    pub system_program: Program<'info, System>,
 }
 
 #[account]
@@ -81,6 +85,15 @@ pub struct UserVault {
 pub struct SolVault {
     pub bump: u8,
     pub receiver: Pubkey,
+}
+
+#[derive(Accounts)]
+pub struct Initialize<'info> {
+    #[account(init, payer = signer, space = 456 + 8 )]
+    pub donation_message: Account<'info, DonationMessage>,
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -146,16 +159,16 @@ pub struct DonateSpl<'info> {
     #[account(mut)]
     pub receiver: SystemAccount<'info>,
 
-    #[account(mut)] 
-    pub user_token_account: Account<'info, TokenAccount>, 
+    #[account(mut, constraint = donor_token_account.mint == mint.key())] 
+    pub donor_token_account: Account<'info, TokenAccount>,
 
     #[account(init_if_needed, 
-        payer = donor, 
+        payer = donor,
         seeds = [b"spl-vault", mint.key().as_ref(), receiver.key().as_ref()], 
         bump, 
-        token::mint = mint, 
+        token::mint = mint,
         token::authority = vault
-    )] 
+    )]
     pub vault_token_account: Account<'info, TokenAccount>,
 
     #[account(
@@ -167,7 +180,9 @@ pub struct DonateSpl<'info> {
     )]
     pub user_vault: Account<'info, UserVault>,
 
+    #[account(seeds = [b"vault", receiver.key().as_ref(), mint.key().as_ref()],bump)]
     pub vault: UncheckedAccount<'info>,
+
     pub mint: Account<'info, Mint>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
