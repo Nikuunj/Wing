@@ -7,36 +7,41 @@ declare_id!("3nR3mRJm7TaWPeA7rScQ8Mbo1eNMpJcE8KdbNQidq2rh");
 pub mod contract {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        msg!("Greetings from: {:?}", ctx.program_id);
+    pub fn initialize(ctx: Context<InitProfile>, name: String, about: String) -> Result<()> {
+        let user_profile = &mut ctx.accounts.user_profile;   
+        user_profile.name = name;
+        user_profile.about = about;
         Ok(())
     }
 
-    pub fn init_receiver_state() -> Result<()> {
-        Ok(())
-    }
+    // pub fn init_receiver_state(ctx: Context<DonateSol>) -> Result<()> {
+    //     msg!("Greetings from: {:?}", ctx.program_id);
+
+    //     Ok(())
+    // }
 
     pub fn donate_sol(ctx: Context<DonateSol>) -> Result<()> {
         let sol_vault = &mut ctx.accounts.sol_vault;
 
         if sol_vault.bump == 0 {
-            sol_vault.bump = *ctx.bumps.get("sol_vault").unwrap();
+            sol_vault.bump = ctx.bumps.sol_vault;
             sol_vault.receiver = ctx.accounts.receiver.key(); 
         }
         Ok(())
     }
 
     pub fn donate_spl(ctx: Context<DonateSpl>) -> Result<()> {
+        // let a = ctx.account.receiver.key().as_ref;
         Ok(())
     }
 
-    pub fn claim_sol() -> Result<()> {
-        Ok(())
-    }
+    // pub fn claim_sol() -> Result<()> {
+    //     Ok(())
+    // }
 
-    pub fn clain_spl() -> Result<()> {
-        Ok(())
-    }
+    // pub fn clain_spl() -> Result<()> {
+        // Ok(())
+    // }
 }
 
 #[derive(Accounts)]
@@ -79,12 +84,12 @@ pub struct SolVault {
 }
 
 #[derive(Accounts)]
-pub strunt InitProfile<'info> {
+pub struct InitProfile<'info> {
     #[account(
         init, 
         payer = signer, 
-        spage = 8 + 24 + 256,
-        seeds = [b"sol-vault", signer.key().as_ref()],
+        space = 8 + 24 + 256,
+        seeds = [b"user-profile", signer.key().as_ref()],
         bump
     )]
     pub user_profile: Account<'info, UserProfile>,
