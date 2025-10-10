@@ -1,13 +1,11 @@
-use anchor_lang::prelude::borsh::de;
 use anchor_lang::prelude::*;
-use anchor_lang::system_program::{transfer, Transfer as SolTransfer };
-use anchor_spl::token::{self, Token, TokenAccount, Mint, Transfer};
+use anchor_lang::system_program::{transfer as sol_transfer, Transfer as SolTransfer};
+use anchor_spl::token::{transfer, Token, TokenAccount, Mint, Transfer};
 
 declare_id!("3nR3mRJm7TaWPeA7rScQ8Mbo1eNMpJcE8KdbNQidq2rh");
 
 #[program]
 pub mod contract {
-
     use super::*;
 
     pub fn initialize(ctx: Context<InitProfile>, name: String, about: String) -> Result<()> {
@@ -33,7 +31,7 @@ pub mod contract {
             }
         );
 
-        transfer(cpi_context, amount)?;
+        sol_transfer(cpi_context, amount)?;
         Ok(())
     }
 
@@ -47,7 +45,7 @@ pub mod contract {
         let cpi_program = ctx.accounts.token_program.to_account_info();
         let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
 
-        token::transfer(cpi_ctx, amount)?;
+        transfer(cpi_ctx, amount)?;
         ctx.accounts.user_vault.owner = ctx.accounts.receiver.key();
         ctx.accounts.user_vault.mint = ctx.accounts.mint.key();
         ctx.accounts.user_vault.amount = ctx.accounts.vault_token_account.amount;
@@ -57,6 +55,8 @@ pub mod contract {
     pub fn claim_sol(ctx: Context<WithdrawSol>, amount: u64) -> Result<()> {
         let balance = ctx.accounts.sol_vault.get_lamports();
         require!(amount <= balance, CustomError::InsufficientBalance);
+
+
         Ok(())
     }
 
@@ -158,7 +158,10 @@ pub struct DonateSpl<'info> {
     #[account(mut)]
     pub receiver: SystemAccount<'info>,
 
-    #[account(mut, constraint = donor_token_account.mint == mint.key())] 
+    #[account(mut, 
+        constraint = donor_token_account.mint == mint.key(),
+        constraint = donor_token_account.owner == donor.key()
+    )] 
     pub donor_token_account: Account<'info, TokenAccount>,
 
     #[account(init_if_needed, 
@@ -179,7 +182,9 @@ pub struct DonateSpl<'info> {
     )]
     pub user_vault: Account<'info, UserVault>,
 
-    #[account(seeds = [b"vault", receiver.key().as_ref(), mint.key().as_ref()],bump)]
+    #[account(seeds = [b"vault", receiver.key().as_ref(), mint.key().as_ref()], bump)]
+    /// CHECK: This is the PDA that acts as authority for `vault_token_account`. 
+    /// It is safe because we derive it with the same seeds and bump as used in `vault_token_account`. 
     pub vault: UncheckedAccount<'info>,
 
     pub mint: Account<'info, Mint>,
