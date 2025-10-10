@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::system_program::{transfer as sol_transfer, Transfer as SolTransfer};
 use anchor_spl::token::{transfer, Token, TokenAccount, Mint, Transfer};
+use anchor_lang::solana_program::{program::invoke_signed, system_instruction};
 
 declare_id!("3nR3mRJm7TaWPeA7rScQ8Mbo1eNMpJcE8KdbNQidq2rh");
 
@@ -56,6 +57,17 @@ pub mod contract {
         let balance = ctx.accounts.sol_vault.get_lamports();
         require!(amount <= balance, CustomError::InsufficientBalance);
 
+        let to_account = ctx.accounts.signer.to_account_info();
+        let sol_vault = ctx.accounts.sol_vault.to_account_info();
+        let program_id = ctx.accounts.system_program.to_account_info();
+
+        let seed = to_account.key();
+        let bump_seed = ctx.bumps.sol_vault;
+        let signer_seed: &[&[&[u8]]] = &[&[b"sol-vault", seed.as_ref(), &[bump_seed]]];
+
+        let instruction = system_instruction::transfer(&sol_vault.key(), &to_account.key(), amount);
+
+        invoke_signed(&instruction, &[sol_vault, to_account, program_id], signer_seed)?;
 
         Ok(())
     }
