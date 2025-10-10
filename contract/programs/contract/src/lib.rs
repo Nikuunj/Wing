@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::system_program::{transfer as sol_transfer, Transfer as SolTransfer};
 use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::token::{transfer, Token, TokenAccount, Mint, Transfer };
+use anchor_spl::token::{transfer, Token, TokenAccount, Mint, Transfer};
 use anchor_lang::solana_program::{program::invoke_signed, system_instruction};
 
 declare_id!("3nR3mRJm7TaWPeA7rScQ8Mbo1eNMpJcE8KdbNQidq2rh");
@@ -74,6 +74,27 @@ pub mod contract {
     }
 
     pub fn clain_spl(ctx: Context<WithdrawSpl>, amount: u64) -> Result<()> {
+        let balance = ctx.accounts.vault_token_account.amount;
+        require!(amount <= balance, CustomError::InsufficientBalance);
+
+        let bump = ctx.bumps.vault;
+        let signer_seed: &[&[&[u8]]] = &[&[
+            b"vault",
+            ctx.accounts.signer.key.as_ref(),
+            ctx.accounts.mint.to_account_info().key.as_ref(),
+            &[bump]
+        ]];
+
+        let cpi_accounts = Transfer {
+            from: ctx.accounts.vault_token_account.to_account_info(),
+            to: ctx.accounts.signer_token_account.to_account_info(),
+            authority: ctx.accounts.vault.to_account_info()
+        };
+
+        let cpi_program = ctx.accounts.token_program.to_account_info();
+        let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seed);
+
+        transfer(cpi_ctx, amount)?;
 
         Ok(())
     }
