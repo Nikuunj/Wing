@@ -8,6 +8,8 @@ declare_id!("3nR3mRJm7TaWPeA7rScQ8Mbo1eNMpJcE8KdbNQidq2rh");
 
 #[program]
 pub mod contract {
+    use anchor_lang::solana_program::instruction::Instruction;
+
     use super::*;
 
     pub fn initialize(ctx: Context<InitProfile>, name: String, about: String) -> Result<()> {
@@ -18,12 +20,7 @@ pub mod contract {
     }
 
     pub fn donate_sol(ctx: Context<DonateSol>, amount: u64) -> Result<()> {
-        require!(amount > 0, CustomError::InvalidAmount);
-        let sol_vault = &mut ctx.accounts.sol_vault;
-        if sol_vault.bump == 0 {
-            sol_vault.bump = ctx.bumps.sol_vault;
-            sol_vault.receiver = ctx.accounts.receiver.key(); 
-        }
+        require!(amount > 0, CustomError::InvalidAmount); 
 
         let cpi_context = CpiContext::new(
             ctx.accounts.system_program.to_account_info(), 
@@ -34,6 +31,14 @@ pub mod contract {
         );
 
         sol_transfer(cpi_context, amount)?;
+        let sol_vault_data = &mut ctx.accounts.sol_vault_data;
+        if sol_vault_data.bump == 0 {
+            sol_vault_data.bump = ctx.bumps.sol_vault;
+            sol_vault_data.owner = ctx.accounts.receiver.key(); 
+        }
+        sol_vault_data.amount += amount;
+        msg!("Staked {} lamports. Total staked: {}.", 
+             amount, sol_vault_data.amount);
         Ok(())
     }
 
@@ -50,26 +55,34 @@ pub mod contract {
         transfer(cpi_ctx, amount)?;
         ctx.accounts.user_vault.owner = ctx.accounts.receiver.key();
         ctx.accounts.user_vault.mint = ctx.accounts.mint.key();
-        ctx.accounts.user_vault.amount = ctx.accounts.vault_token_account.amount;
+        ctx.accounts.user_vault.amount += amount;
         Ok(())
     }
 
     pub fn claim_sol(ctx: Context<WithdrawSol>, amount: u64) -> Result<()> {
-        let balance = ctx.accounts.sol_vault.get_lamports();
+        let balance = ctx.accounts.sol_vault_data.amount;
         require!(amount <= balance, CustomError::InsufficientBalance);
 
         let to_account = ctx.accounts.signer.to_account_info();
         let sol_vault = ctx.accounts.sol_vault.to_account_info();
         let program_id = ctx.accounts.system_program.to_account_info();
 
-        let seed = to_account.key();
+        let seed = ctx.accounts.signer.key();
         let bump_seed = ctx.bumps.sol_vault;
-        let signer_seed: &[&[&[u8]]] = &[&[b"sol-vault", seed.as_ref(), &[bump_seed]]];
+        let signer_seeds: &[&[&[u8]]] = &[&[b"sol-vault", seed.as_ref(), &[bump_seed]]];
 
-        let instruction = system_instruction::transfer(&sol_vault.key(), &to_account.key(), amount);
+        let cpi_context = CpiContext::new_with_signer(
+            ctx.accounts.system_program.to_account_info(),
+            SolTransfer {
+                from: ctx.accounts.sol_vault.to_account_info(),
+                to: ctx.accounts.signer.to_account_info(),
+            },
+            signer_seeds,
+        );
+        sol_transfer(cpi_context, amount)?;
 
-        invoke_signed(&instruction, &[sol_vault, to_account, program_id], signer_seed)?;
-
+        ctx.accounts.sol_vault_data.amount -= amount;
+        msg!("Withdrawn {} lamports. Remaining: {}", amount, ctx.accounts.sol_vault_data.amount);
         Ok(())
     }
 
@@ -96,6 +109,7 @@ pub mod contract {
 
         transfer(cpi_ctx, amount)?;
 
+        ctx.accounts.user_vault.amount -= amount;
         Ok(())
     }
 }
@@ -125,9 +139,10 @@ pub struct UserVault {
 }
 
 #[account]
-pub struct SolVault {
+pub struct SolVaultData {
     pub bump: u8,
-    pub receiver: Pubkey,
+    pub owner: Pubkey,
+    pub amount: u64
 }
 
 #[derive(Accounts)]
@@ -154,14 +169,23 @@ pub struct DonateSol<'info> {
     #[account(mut)]
     pub receiver: SystemAccount<'info>,
 
+
     #[account(
-        init_if_needed,
-        payer = donor,
-        space = 8 + 1 + 32,
+        mut,
         seeds = [b"sol-vault", receiver.key().as_ref()],
         bump
     )]
-    pub sol_vault: Account<'info, SolVault>,
+    pub sol_vault: SystemAccount<'info>,
+
+
+    #[account(
+        init_if_needed,
+        payer = donor,
+        space = 8 + 1 + 32 + 8,
+        seeds = [b"sol-vault-data", receiver.key().as_ref()],
+        bump
+    )]
+    pub sol_vault_data: Account<'info, SolVaultData>,
 
     pub system_program: Program<'info, System>,
 }
@@ -218,8 +242,15 @@ pub struct  WithdrawSol<'info> {
         seeds = [b"sol-vault", signer.key().as_ref()],
         bump
     )]
-    pub sol_vault: Account<'info, SolVault>,
+    pub sol_vault: SystemAccount<'info>,
 
+
+    #[account(
+        mut,
+        seeds = [b"sol-vault-data", signer.key().as_ref()],
+        bump
+    )]
+    pub sol_vault_data: Account<'info, SolVaultData>,
     pub system_program: Program<'info, System>,
 }
 
