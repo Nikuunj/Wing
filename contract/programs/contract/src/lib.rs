@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::system_program::{transfer as sol_transfer, Transfer as SolTransfer};
-use anchor_spl::token::{transfer, Token, TokenAccount, Mint, Transfer};
+use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::token::{transfer, Token, TokenAccount, Mint, Transfer };
 use anchor_lang::solana_program::{program::invoke_signed, system_instruction};
 
 declare_id!("3nR3mRJm7TaWPeA7rScQ8Mbo1eNMpJcE8KdbNQidq2rh");
@@ -72,9 +73,10 @@ pub mod contract {
         Ok(())
     }
 
-    // pub fn clain_spl() -> Result<()> {
-        // Ok(())
-    // }
+    pub fn clain_spl(ctx: Context<WithdrawSpl>, amount: u64) -> Result<()> {
+
+        Ok(())
+    }
 }
 
 #[account]
@@ -108,15 +110,6 @@ pub struct SolVault {
 }
 
 #[derive(Accounts)]
-pub struct Initialize<'info> {
-    #[account(init, payer = signer, space = 456 + 8 )]
-    pub donation_message: Account<'info, DonationMessage>,
-    #[account(mut)]
-    pub signer: Signer<'info>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
 pub struct InitProfile<'info> {
     #[account(
         init, 
@@ -127,16 +120,6 @@ pub struct InitProfile<'info> {
     )]
     pub user_profile: Account<'info, UserProfile>,
 
-    #[account(mut)]
-    pub signer: Signer<'info>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct InitReceiverState<'info> {
-    #[account(init, payer = signer, space = 8 + 32 + 32 + 8)]
-    pub receiver_state: Account<'info, UserVault>,
-    pub receiver: SystemAccount<'info>,
     #[account(mut)]
     pub signer: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -217,6 +200,44 @@ pub struct  WithdrawSol<'info> {
     pub sol_vault: Account<'info, SolVault>,
 
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub  struct  WithdrawSpl<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    #[account(mut, 
+        seeds = [b"spl-vault", signer.key().as_ref(), mint.key().as_ref()], 
+        bump,
+        token::mint = mint,
+        token::authority = vault
+    )]
+    pub vault_token_account: Account<'info, TokenAccount>,
+
+    #[account(
+        init_if_needed,
+        payer = signer,
+        associated_token::mint = mint,
+        associated_token::authority = signer,
+    )]
+    pub signer_token_account: Account<'info, TokenAccount>,
+    #[account(
+        mut,
+        seeds = [b"user-vault", signer.key().as_ref(), mint.key().as_ref()],
+        bump
+    )]
+    pub user_vault: Account<'info, UserVault>,
+
+    #[account(seeds = [b"vault", signer.key().as_ref(), mint.key().as_ref()], bump)]
+    /// CHECK: This is the PDA that acts as authority for `vault_token_account`. 
+    /// It is safe because we derive it with the same seeds and bump as used in `vault_token_account`. 
+    pub vault: UncheckedAccount<'info>,
+
+    pub mint: Account<'info, Mint>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 #[error_code]
