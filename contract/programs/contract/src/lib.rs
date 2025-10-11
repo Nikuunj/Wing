@@ -1,14 +1,12 @@
 use anchor_lang::prelude::*;
 use anchor_lang::system_program::{transfer as sol_transfer, Transfer as SolTransfer};
 use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::token::{transfer, Token, TokenAccount, Mint, Transfer};
-use anchor_lang::solana_program::{program::invoke_signed, system_instruction};
+use anchor_spl::token::{transfer, Token, TokenAccount, Mint, Transfer, spl_token};
 
-declare_id!("3nR3mRJm7TaWPeA7rScQ8Mbo1eNMpJcE8KdbNQidq2rh");
+declare_id!("HKvDpbKfjDmyAwKayc4hewRZdMBgdLKVXgNpLFzfjEn9");
 
 #[program]
 pub mod contract {
-    use anchor_lang::solana_program::instruction::Instruction;
 
     use super::*;
 
@@ -19,8 +17,8 @@ pub mod contract {
         Ok(())
     }
 
-    pub fn donate_sol(ctx: Context<DonateSol>, amount: u64) -> Result<()> {
-        require!(amount > 0, CustomError::InvalidAmount); 
+    pub fn donate_sol(ctx: Context<DonateSol>, amount: u64, sender_name: String, message: String, timestamp: i64) -> Result<()> {
+        require!(amount > 0, CustomError::InvalidAmount);
 
         let cpi_context = CpiContext::new(
             ctx.accounts.system_program.to_account_info(), 
@@ -37,13 +35,24 @@ pub mod contract {
             sol_vault_data.owner = ctx.accounts.receiver.key(); 
         }
         sol_vault_data.amount += amount;
-        msg!("Staked {} lamports. Total staked: {}.", 
+        msg!("Tip {} lamports. Total staked: {}.", 
              amount, sol_vault_data.amount);
+
+        let donate_msg = &mut ctx.accounts.donate_msg;
+
+        donate_msg.amount = amount;
+        donate_msg.sender_pubkey = ctx.accounts.donor.key();
+        donate_msg.receiver_pubkey = ctx.accounts.receiver.key();
+        donate_msg.ts = timestamp;
+        donate_msg.sender_name = sender_name;
+        donate_msg.message = message;
+        donate_msg.mint = spl_token::native_mint::ID;
+
         Ok(())
     }
 
-    pub fn donate_spl(ctx: Context<DonateSpl>, amount: u64) -> Result<()> {
-        require!(amount > 0, CustomError::InvalidAmount);
+    pub fn donate_spl(ctx: Context<DonateSpl>, amount: u64, sender_name: String, message: String, timestamp: i64) -> Result<()> {
+       require!(amount > 0, CustomError::InvalidAmount);
         let cpi_accounts = Transfer {
             from: ctx.accounts.donor_token_account.to_account_info(),
             to: ctx.accounts.vault_token_account.to_account_info(),
@@ -56,6 +65,17 @@ pub mod contract {
         ctx.accounts.user_vault.owner = ctx.accounts.receiver.key();
         ctx.accounts.user_vault.mint = ctx.accounts.mint.key();
         ctx.accounts.user_vault.amount += amount;
+
+        let donate_msg = &mut ctx.accounts.donate_msg;
+
+        donate_msg.amount = amount;
+        donate_msg.sender_pubkey = ctx.accounts.donor.key();
+        donate_msg.receiver_pubkey = ctx.accounts.receiver.key();
+        donate_msg.ts = timestamp;
+        donate_msg.sender_name = sender_name;
+        donate_msg.message = message;
+        donate_msg.mint = spl_token::native_mint::ID;
+
         Ok(())
     }
 
@@ -63,9 +83,6 @@ pub mod contract {
         let balance = ctx.accounts.sol_vault_data.amount;
         require!(amount <= balance, CustomError::InsufficientBalance);
 
-        let to_account = ctx.accounts.signer.to_account_info();
-        let sol_vault = ctx.accounts.sol_vault.to_account_info();
-        let program_id = ctx.accounts.system_program.to_account_info();
 
         let seed = ctx.accounts.signer.key();
         let bump_seed = ctx.bumps.sol_vault;
@@ -116,8 +133,8 @@ pub mod contract {
 
 #[account]
 pub struct DonationMessage {
-    pub sender: Pubkey,
-    pub receiver: Pubkey,
+    pub sender_pubkey: Pubkey,
+    pub receiver_pubkey: Pubkey,
     pub mint: Pubkey,
     pub amount: u64,
     pub ts: i64,
@@ -125,6 +142,19 @@ pub struct DonationMessage {
     pub message: String,
 }
 
+impl DonationMessage {
+    pub fn calculate_space(sender_name: &str, message: &str) -> usize {
+        8 +
+        32 +
+        32 +
+        32 +
+        8 +
+        8 + 
+        4 + 
+        sender_name.len() +
+        4 + message.len()
+    }
+}
 #[account]
 pub struct UserProfile {
     pub name: String,
@@ -162,6 +192,7 @@ pub struct InitProfile<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(amount: u64, sender_name: String, message: String, timestamp: i64)]
 pub struct DonateSol<'info> {
     #[account(mut)]
     pub donor: Signer<'info>,
@@ -187,10 +218,25 @@ pub struct DonateSol<'info> {
     )]
     pub sol_vault_data: Account<'info, SolVaultData>,
 
+    #[account(
+        init,
+        payer = donor,
+        space = DonationMessage::calculate_space(&sender_name, &message),
+        seeds = [
+            b"donor-msg", 
+            receiver.key().as_ref(), 
+            donor.key().as_ref(),
+            &timestamp.to_le_bytes()
+        ],
+        bump
+    )]
+    pub donate_msg: Account<'info, DonationMessage>,
+
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
+#[instruction(amount: u64, sender_name: String, message: String, timestamp: i64)]
 pub struct DonateSpl<'info> {
     #[account(mut)]
     pub donor: Signer<'info>,
@@ -226,6 +272,21 @@ pub struct DonateSpl<'info> {
     /// CHECK: This is the PDA that acts as authority for `vault_token_account`. 
     /// It is safe because we derive it with the same seeds and bump as used in `vault_token_account`. 
     pub vault: UncheckedAccount<'info>,
+
+    #[account(
+        init,
+        payer = donor,
+        space = DonationMessage::calculate_space(&sender_name, &message),
+        seeds = [
+            b"donor-msg", 
+            receiver.key().as_ref(), 
+            donor.key().as_ref(),
+            &timestamp.to_le_bytes()
+        ],
+        bump
+    )]
+    pub donate_msg: Account<'info, DonationMessage>,
+
 
     pub mint: Account<'info, Mint>,
     pub system_program: Program<'info, System>,
