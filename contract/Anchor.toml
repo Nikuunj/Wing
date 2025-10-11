@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-contract = "HKvDpbKfjDmyAwKayc4hewRZdMBgdLKVXgNpLFzfjEn9"
+contract = "AwYxen6oaiLQk2VjPkw7CGUupKWCFkAFALGgw1LdxmA5"
 
 [programs.testnet]
 contract = "HKvDpbKfjDmyAwKayc4hewRZdMBgdLKVXgNpLFzfjEn9"
@@ -15,8 +15,13 @@ contract = "HKvDpbKfjDmyAwKayc4hewRZdMBgdLKVXgNpLFzfjEn9"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "https://api.testnet.solana.com"
-wallet = "~/.config/solana/testnet.json"
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+# [provider]
+# cluster = "https://api.testnet.solana.com"
+# wallet = "~/.config/solana/testnet.json"
+# timeout = 120000 
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

@@ -2,8 +2,20 @@ use anchor_lang::prelude::*;
 use anchor_lang::system_program::{transfer as sol_transfer, Transfer as SolTransfer};
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{transfer, Token, TokenAccount, Mint, Transfer, spl_token};
+#[cfg(not(feature = "no-entrypoint"))]
+use solana_security_txt::security_txt;
 
 declare_id!("HKvDpbKfjDmyAwKayc4hewRZdMBgdLKVXgNpLFzfjEn9");
+
+#[cfg(not(feature = "no-entrypoint"))]
+security_txt! {
+    name:  "Wing Contract",
+    project_url:  "https://github.com/Nikuunj/Wing",
+    contacts: "email:mnikunj2622@gmail.com, twitter:@IsNikunj",
+    policy: "https://github.com/Nikuunj/Wing/blob/main/SECURITY.md",
+    preferred_languages: "en",
+    source_code:  "https://github.com/Nikuunj/Wing"
+}
 
 #[program]
 pub mod contract {
