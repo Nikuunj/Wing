@@ -17,7 +17,7 @@ export const why = [
   },
 ]
 
-const howitwork = [
+export const howitwork = [
   {
     title: 'Connect Wallet',
     text: 'Link your Solana wallet to get started instantly'
@@ -30,4 +30,32 @@ const howitwork = [
     title: 'Instant Delivery',
     text: 'Creators receive funds directly in seconds'
   }
+]
+
+export const feature = [
+  {
+    title: 'On-Chain Messages',
+    text: 'Send messages with every tip. Each message is permanently stored on-chain, ensuring transparency.'
+  },
+  {
+    title: 'On-Chain Profiles',
+    text: 'Create and own your profile directly on the Solana blockchain — fully decentralized and secure.'
+  },
+  {
+    title: 'Instant Withdrawals',
+    text: 'Withdraw your funds anytime, instantly. No delays, full freedom.'
+  },
+
+  {
+    title: 'Zero Fees',
+    text: 'Keep 100% of your earnings. No platform charges, ever.'
+  },
+  {
+    title: 'Full Ownership',
+    text: 'You control your identity, data, and funds — completely trustless.'
+  },
+  {
+    title: 'Fully Decentralized',
+    text: 'Built on Solana, ensuring trustless interactions and seamless blockchain performance.'
+  },
 ]
