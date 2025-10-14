@@ -6,6 +6,7 @@ import { BaseWalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { CONNECT_LABELS } from "@/lib/lable";
 import ConnectBtn from "../ui/ConnectBtn";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { HoverBorderGradient } from "../ui/HoverBorderGradient";
 
 function Hero() {
   const wallet = useWallet();
@@ -20,15 +21,29 @@ function Hero() {
             <span className="z-10">wings</span> <Image src={logo} className="w-7 h-7 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-13 lg:h-13 lg:top-5 md:top-2 relative md:right-1 -z-10 inline-block align-top" alt={'logo'}></Image>
           </span>
         </p>
-        <BaseWalletMultiButton labels={CONNECT_LABELS} style={{ outline: '0', background: 'transparent', padding: 0, height: 'fit-content' }} >
-          <ConnectBtn className="px-9 py-1.5 text-lg">
-            {
-              wallet.connected && wallet.publicKey ?
-                wallet.publicKey.toBase58().slice(0, 3) + ".." + wallet.publicKey.toBase58().slice(-3)
-                : 'Connect'
-            }
-          </ConnectBtn>
-        </BaseWalletMultiButton>
+        <div className="flex items-center gap-2 sm:gap-5">
+          <BaseWalletMultiButton labels={CONNECT_LABELS} style={{ outline: '0', background: 'transparent', padding: 0, height: 'fit-content' }} >
+            <ConnectBtn className="sm:px-9 px-5 py-2 sm:text-base">
+              {
+                wallet.connected && wallet.publicKey ?
+                  wallet.publicKey.toBase58().slice(0, 3) + ".." + wallet.publicKey.toBase58().slice(-3)
+                  : 'Connect'
+              }
+            </ConnectBtn>
+          </BaseWalletMultiButton>
+          <div>
+            <HoverBorderGradient
+              containerClassName="rounded-full"
+              as={'button'}
+              className="text-white flex items-center space-x-2"
+            >
+              <Image src={logo} className="w-6 h-6" alt="logo" />
+              <span className="font-semibold">
+                Create wings
+              </span>
+            </HoverBorderGradient>
+          </div>
+        </div>
       </div>
     </div>
   )
