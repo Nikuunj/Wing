@@ -12,13 +12,14 @@ export const Navbar = () => {
   const [tap, setTap] = useState<boolean>(false);
   const wallet = useWallet();
   return (
-    <div className="bg-white/2 backdrop-blur-sm  border border-zinc-800 py-2.5 px-3 sm:px-10 flex justify-between items-center fixed max-w-screen min-w-screen top-0 z-50">
+    <div className="bg-black/3 backdrop-blur-sm  border border-zinc-800 py-2.5 px-3 sm:px-10 flex justify-between items-center fixed max-w-screen min-w-screen top-0 z-50">
       <div className={`h-10 w-10`}>
         <Image
           src={logo}
           alt="logo"
           width={200}
           height={200}
+          className="contracst-20 "
         />
       </div>
       <div className={`flex  items-center relative px-12`}>

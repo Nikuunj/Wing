@@ -7,12 +7,14 @@ import { CONNECT_LABELS } from "@/lib/lable";
 import ConnectBtn from "../ui/ConnectBtn";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { HoverBorderGradient } from "../ui/HoverBorderGradient";
+import heroImg from '@/public/hero.png';
 
 function Hero() {
   const wallet = useWallet();
   return (
     <div className="w-full relative">
       <Meteors number={15} />
+      <Image src={heroImg} alt="hero" className="absolute bg-cover -z-10  w-full h-full hue-rotate-270 saturate-100 grayscale-100 contrast-120 brightness-25" />
       <div className=" min-h-screen flex flex-col justify-center items-center gap-7">
         <p className=" text-5xl/13 sm:text-7xl/18 md:text-8xl/27 lg:text-9xl/33 w-3/4 sm:w-2/3 font-bold text-center text-balance capitalize">
 
