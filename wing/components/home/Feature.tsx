@@ -2,7 +2,7 @@ import { feature } from "@/utils/data"
 import CardFeature from "./CardFeature"
 
 function Feature() {
-  const render = feature.map((val, idx) => <CardFeature text={val.text} title={val.title} />)
+  const render = feature.map((val, idx) => <CardFeature key={idx + val.text} text={val.text} title={val.title} />)
   return (
     <div className="flex flex-col justify-center items-center gap-17">
       <div className="text-center space-y-5">

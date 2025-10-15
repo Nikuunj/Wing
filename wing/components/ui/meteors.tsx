@@ -12,12 +12,12 @@ export const Meteors = ({
   className?: string;
 }) => {
   const meteors = new Array(number || 20).fill(true);
-  const [screen, setScreen] = useState(window.innerWidth);
+  const [screen, setScreen] = useState<number>(0);
   useEffect(() => {
     const updateScreenWidth = () => {
       setScreen(window.innerWidth);
     };
-
+    updateScreenWidth();
     window.addEventListener('resize', updateScreenWidth);
 
     return () => {
