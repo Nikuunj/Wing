@@ -1,4 +1,15 @@
-import { Shield, Users, Zap } from 'lucide-react'
+import {
+  Shield,
+  Users,
+  Zap,
+  User,
+  LayoutDashboard,
+  Clock,
+  MessageSquare,
+  Send,
+  Banknote
+} from 'lucide-react'
+
 export const why = [
   {
     title: 'No KYC Required',
@@ -59,3 +70,36 @@ export const feature = [
     text: 'Built on Solana, ensuring trustless interactions and seamless blockchain performance.'
   },
 ]
+
+export const navbarLink = [
+  {
+    title: 'Profile',
+    to: '',
+    icon: User
+  },
+  {
+    title: 'Dashboard',
+    to: '',
+    icon: LayoutDashboard
+  },
+  {
+    title: 'History',
+    to: '',
+    icon: Clock
+  },
+  {
+    title: 'Messages',
+    to: '',
+    icon: MessageSquare
+  },
+  {
+    title: 'Send Assets',
+    to: '',
+    icon: Send
+  },
+  {
+    title: 'Withdraw',
+    to: '',
+    icon: Banknote
+  }
+];

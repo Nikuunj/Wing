@@ -23,22 +23,6 @@ export const metadata: Metadata = {
   },
   description:
     "Wing is a SOL-based tipping platform that lets creators receive instant support from their fans — fully decentralized and powered by Solana.",
-  openGraph: {
-    title: "Wing | Fund gives you wings",
-    description:
-      "SOL-based tipping platform built on Solana, enabling creators to receive instant on-chain support — fully decentralized and trustless.",
-    url: "https://wingapp.vercel.app/",
-    siteName: "Wing",
-    images: [
-      {
-        url: "/logo.svg",
-        width: 1200,
-        height: 630,
-        alt: "Wing Logo",
-      },
-    ],
-    type: "website",
-  },
   twitter: {
     card: "summary_large_image",
     title: "Wing | Fund gives you wings",
