@@ -1,5 +1,5 @@
 import { navbarLink } from "@/utils/data";
-import { LucideProps } from "lucide-react";
+import { ArrowBigLeft, ChevronRight, LucideProps } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react"
 import Link from "next/link";
 import { ForwardRefExoticComponent, RefAttributes } from "react";
@@ -32,9 +32,15 @@ function LinkComponent({ text, to, closeOpen, Icon }: {
   return (
     <div onClick={closeOpen} className="cursor-pointer">
       <Link href={to}
-        className="flex gap-3 border p-2 border-zinc-700 rounded-lg hover:-translate-y-1.5 transition-all duration-200 items-center">
-        <Icon className="w-4.5 h-4.5 text-purple-300 drop-shadow-[0px_0px_5px] drop-shadow-blue-400" />{text}</Link>
-    </div>
+        className="flex gap-3 border p-2 border-zinc-700 rounded-lg hover:-translate-y-1.5 transition-all 
+        duration-200 justify-between items-center pe-3 hover:pe-2"
+      >
+        <span className="flex gap-3 items-center ">
+          <Icon className="w-4.5 h-4.5 text-purple-300 drop-shadow-[0px_0px_5px] drop-shadow-blue-400" />{text}
+        </span>
+        <ChevronRight className="w-4.5 h-4.5 text-zinc-400" />
+      </Link>
+    </div >
   )
 }
 export default SideBar
