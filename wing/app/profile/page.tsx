@@ -1,4 +1,5 @@
 "use client"
+import Profile from "@/components/profile/Profile";
 import { CONNECT_LABELS } from "@/lib/lable";
 import { useWallet } from "@solana/wallet-adapter-react"
 import { BaseWalletMultiButton, useWalletModal } from "@solana/wallet-adapter-react-ui";
@@ -11,6 +12,8 @@ function ProfilePage() {
   useEffect(() => {
     if (!connected) {
       setVisible(true);
+    } else {
+      setVisible(false)
     }
   }, [connected, setVisible]);
   if (!connected) {
@@ -24,7 +27,7 @@ function ProfilePage() {
   }
   return (
     <div className="flex flex-col justify-center items-center min-h-screen">
-      ProfilePage
+      <Profile />
     </div>
   )
 }

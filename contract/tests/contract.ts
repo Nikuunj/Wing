@@ -104,7 +104,7 @@ describe("contract", () => {
       const tx = await program.methods
         .initialize(name, about)
         .accounts({
-          userProfile: userProfilePda,
+          user_profile: userProfilePda,
           signer: receiver.publicKey,
           systemProgram: anchor.web3.SystemProgram.programId,
         })
@@ -122,7 +122,7 @@ describe("contract", () => {
       try {
         await program.methods
           .initialize("Another Name", "Another About")
-          .accounts({
+          .accountsPartial({
             userProfile: userProfilePda,
             signer: receiver.publicKey,
             systemProgram: anchor.web3.SystemProgram.programId,
