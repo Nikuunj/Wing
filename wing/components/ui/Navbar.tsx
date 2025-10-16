@@ -10,7 +10,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import SideBar from "./SideBar";
 
 export const Navbar = () => {
-  const [tap, setTap] = useState<boolean>(true);
+  const [tap, setTap] = useState<boolean>(false);
   const wallet = useWallet();
   return (
     <>
