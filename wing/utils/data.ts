@@ -74,12 +74,12 @@ export const feature = [
 export const navbarLink = [
   {
     title: 'Profile',
-    to: '',
+    to: '/profile',
     icon: User
   },
   {
     title: 'Dashboard',
-    to: '',
+    to: '/dashboard',
     icon: LayoutDashboard
   },
   {
