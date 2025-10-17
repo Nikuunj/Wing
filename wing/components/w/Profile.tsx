@@ -6,10 +6,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import Popup from "../ui/Popup";
 import { useRouter } from "next/navigation";
+import { CircleUser, Copy, SquarePlus, User2Icon } from "lucide-react";
+import AboutPopover from "./AboutPopover";
 
 function Profile({ address }: { address: string }) {
   const { program, connection } = useProgram();
-  const [open, setOpen] = useState<boolean>(true);
+  const [open, setOpen] = useState<boolean>(false);
   const router = useRouter();
   const fetchProfile = async () => {
     if (!connection || !program) return;
@@ -42,14 +44,48 @@ function Profile({ address }: { address: string }) {
   }, [isError])
 
   if (isLoading) {
-    return <div>Loading...</div>
+    return (
+      <div className="break-words w-full border-b border-zinc-700   px-7 py-8 flex justify-between">
+        <div className="space-y-2">
+          <p className="text-xl font-[650] flex gap-2 items-center">
+            <CircleUser className="w-4.5 h-4.5 text-zinc-500 font-light" /> <span className="w-[100%] h-7 inline bg-zinc-800 rounded-xl" />
+          </p>
+          <p className="items-center flex gap-3">
+            {address.slice(0, 3)}...{address.slice(-3)}
+            <Copy className="w-4 h-4 text-zinc-500"
+              onClick={() => {
+                alert('Copy to clipboard')
+                navigator.clipboard.writeText(address)
+              }}
+            />
+          </p>
+        </div>
+        <div>
+          <div className="h-5 w-5 rounded-2xl bg-zinc-800" />
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="w-fit break-words">
-      Profile {address}
-      <br />
-      {JSON.stringify(data)}
+    <div className="break-words w-full border-b border-zinc-700   px-7 py-8 flex justify-between">
+      <div className="space-y-2">
+        <p className="text-xl font-[650] flex gap-2 items-center">
+          <CircleUser className="w-4.5 h-4.5 text-zinc-500 font-light" /> {data?.name ? data.name : "-"}
+        </p>
+        <p className="items-center flex gap-3">
+          {address.slice(0, 3)}...{address.slice(-3)}
+          <Copy className="w-4 h-4 text-zinc-500"
+            onClick={() => {
+              alert('Copy to clipboard')
+              navigator.clipboard.writeText(address)
+            }}
+          />
+        </p>
+      </div>
+      <div>
+        <AboutPopover aboutText={data?.about ? data.about : "-"} />
+      </div>
       {open && <Popup
         yesFn={() => setOpen(false)}
         noFn={() => { router.push('/') }}
