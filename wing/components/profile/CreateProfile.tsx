@@ -48,6 +48,7 @@ function CreateProfile() {
 
       <input placeholder="input 1 name" ref={(e) => { ref.current[1] = e }} />
       <button onClick={handleSubmit}>Click me</button>
+      {isFetching && 'Loading...'}
     </div>
   )
 }
