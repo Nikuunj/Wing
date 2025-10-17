@@ -21,7 +21,7 @@ export const Navbar = () => {
             alt="logo"
             width={200}
             height={200}
-            className="contracst-20 "
+            className="contracst-20 drop-shadow-[0px_0px_4px] drop-shadow-amber-200"
           />
         </div>
         <div className={`flex  items-center relative px-12`}>

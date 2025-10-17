@@ -20,7 +20,7 @@ function Hero() {
 
           Fund give you {' '}
           <span className="inline-block -space-x-4 sm:-space-x-6 md:-space-x-8 lg:-space-x-10">
-            <span className="z-10">wings</span> <Image src={logo} className="w-7 h-7 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-13 lg:h-13 lg:top-5 md:top-2 relative md:right-1 -z-10 inline-block align-top" alt={'logo'}></Image>
+            <span className="z-10">wings</span> <Image src={logo} className="w-7 h-7 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-13 lg:h-13 lg:top-5 md:top-2 relative md:right-1 -z-10 inline-block align-top drop-shadow-[0px_0px_4px] drop-shadow-amber-200" alt={'logo'}></Image>
           </span>
         </p>
         <div className="flex items-center gap-2 sm:gap-5">
