@@ -1,11 +1,10 @@
 "use client"
-import Profile from "@/components/profile/Profile";
 import { CONNECT_LABELS } from "@/lib/lable";
-import { useWallet } from "@solana/wallet-adapter-react"
+import { useWallet } from "@solana/wallet-adapter-react";
 import { BaseWalletMultiButton, useWalletModal } from "@solana/wallet-adapter-react-ui";
-import { useEffect } from "react";
+import { ReactNode, useEffect } from "react"
 
-function ProfilePage() {
+function layout({ children }: { children: ReactNode }) {
   const { connected } = useWallet();
   const { setVisible } = useWalletModal();
 
@@ -25,11 +24,10 @@ function ProfilePage() {
       />
     </div>
   }
+
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen">
-      <Profile />
-    </div>
+    <div>{children}</div>
   )
 }
 
-export default ProfilePage
+export default layout
