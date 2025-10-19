@@ -1,3 +1,4 @@
+"use client"
 import { ReactNode } from "react"
 
 function ConnectBtn({ children, className }: { children: ReactNode, className?: string }) {
