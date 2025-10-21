@@ -10,7 +10,7 @@ function ChartContainer() {
     );
     const json = await res.json();
 
-    const formatted = json.map((item: any) => {
+    const formatted = json.map((item: string[]) => {
       const timestamp = item[0];
       const date = new Date(timestamp);
 

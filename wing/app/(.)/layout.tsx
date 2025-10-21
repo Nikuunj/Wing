@@ -4,7 +4,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { BaseWalletMultiButton, useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { ReactNode, useEffect } from "react"
 
-function layout({ children }: { children: ReactNode }) {
+function Layout({ children }: { children: ReactNode }) {
   const { connected } = useWallet();
   const { setVisible } = useWalletModal();
 
@@ -30,4 +30,4 @@ function layout({ children }: { children: ReactNode }) {
   )
 }
 
-export default layout
+export default Layout
