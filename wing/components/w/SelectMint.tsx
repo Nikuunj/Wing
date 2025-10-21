@@ -9,12 +9,13 @@ import { ChevronDown } from "lucide-react";
 interface Token {
   mint: PublicKey | undefined;
   symbol: string | undefined;
+  decimals: number;
 }
 
 function SelectMint({
   mintRef
 }: {
-  mintRef: React.MutableRefObject<{ value: string; symbol: string }>
+  mintRef: React.MutableRefObject<{ value: string; symbol: string, decimals: number }>
 }) {
   const { publicKey } = useWallet();
   const { connection } = useConnection();
@@ -36,7 +37,8 @@ function SelectMint({
           const parsedInfo = acc.account.data.parsed.info;
           const mintPubkey = new PublicKey(parsedInfo.mint);
           const data = await getTokenMetadata(connection, mintPubkey);
-          return { mint: data?.mint, symbol: data?.symbol };
+          const decimals = parsedInfo.tokenAmount?.decimals ?? 0
+          return { mint: data?.mint, symbol: data?.symbol, decimals };
         })
       );
 
@@ -65,19 +67,19 @@ function SelectMint({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSelect = (value: string, symbol: string) => {
-    mintRef.current = { value, symbol };
+  const handleSelect = (value: string, symbol: string, decimals: number) => {
+    mintRef.current = { value, symbol, decimals };
     setIsOpen(false);
   };
 
   if (isLoading) return <div className="text-zinc-400">Loading tokens...</div>;
-  if (isError) return <div className="text-red-400">Error loading tokens</div>;
 
   const allTokens = [
-    { value: "SOL", symbol: "SOL" },
+    { value: "SOL", symbol: "SOL", decimals: 9 },
     ...(tokens?.map(t => ({
       value: t.mint?.toString() || "",
-      symbol: t.symbol || "Unknown"
+      symbol: t.symbol || "Unknown",
+      decimals: t.decimals
     })) || [])
   ];
 
@@ -98,7 +100,7 @@ function SelectMint({
           {allTokens.map((token, idx) => (
             <button
               key={token.value || idx}
-              onClick={() => handleSelect(token.value, token.symbol)}
+              onClick={() => handleSelect(token.value, token.symbol, token.decimals)}
               className={`w-full px-4 py-3 text-left hover:bg-zinc-800 transition-colors border-t border-zinc-700 ${mintRef.current.value === token.value ? 'bg-zinc-800' : ''
                 }`}
             >
