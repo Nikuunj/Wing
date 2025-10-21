@@ -16,6 +16,7 @@
   "devDependencies": {
     "@coral-xyz/anchor": "^0.32.1",
     "@eslint/eslintrc": "^3",
+    "@metaplex-foundation/mpl-token-metadata": "^3.4.0",
     "@solana/spl-token": "^0.4.14",
     "@solana/spl-token-registry": "^0.2.4574",
     "@solana/wallet-adapter-react": "^0.15.39",

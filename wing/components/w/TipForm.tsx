@@ -5,21 +5,28 @@ import Image from "next/image";
 import logo from '@/public/logo.svg'
 import SelectMint from "./SelectMint";
 import { useProgram } from "@/hook/useProgram";
-
+import * as anchor from "@coral-xyz/anchor";
+import { PublicKey } from "@solana/web3.js";
+import { acceleratedValues } from "motion/react";
+import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 
 function Tip({ address }: { address: string }) {
 
   const { program, publicKey, connection } = useProgram();
 
   const reference = useRef<(HTMLInputElement | HTMLTextAreaElement | null)[]>(Array(3).fill(null));
-  const mintRef = useRef({ value: "SOL", symbol: "SOL" });
+  const mintRef = useRef({ value: "SOL", symbol: "SOL", decimals: 9 });
 
   const handleSubmit = async () => {
     const mint = mintRef.current.value;
     const name = reference.current[0]?.value;
     const message = reference.current[1]?.value;
     const amount = reference.current[2]?.value;
-
+    const decimals = mintRef.current.decimals;
+    if (!publicKey) {
+      alert('Please connect your wallet')
+      return
+    }
     if (!mint) {
       alert('Mint Address Is not valid')
       return;
@@ -33,24 +40,93 @@ function Tip({ address }: { address: string }) {
       return;
     }
     if (!amount) {
-      alert('Enter valid ammout')
+      alert('Enter valid amount')
       return;
     }
+    const timestamp = Date.now();
 
+    const receiver = new PublicKey(address);
     let tx;
     if (mint === 'SOL') {
-      tx = await program.methods.donateSol
+      const amountNumber = parseFloat(amount);
+      const lamport = new anchor.BN(Math.round(amountNumber * 10 ** decimals));
+      const [solVaultPda, _vaultBump] = anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("sol-vault"), receiver.toBuffer()],
+        program.programId)
+      const [solVaultDataPda, _vaultDataBump] = anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("sol-vault-data"), receiver.toBuffer()],
+        program.programId)
+      const [donateMsgPda, _donateMsgBump] = anchor.web3.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("donor-msg"),
+          receiver.toBuffer(),
+          publicKey?.toBuffer(),
+          new anchor.BN(timestamp).toArrayLike(Buffer, "le", 8),
+        ],
+        program.programId
+      )
 
+      tx = await program.methods
+        .donateSol(lamport, name, message, new anchor.BN(timestamp))
+        .accountsPartial({
+          donor: publicKey,
+          receiver: receiver,
+          solVault: solVaultPda,
+          solVaultData: solVaultDataPda,
+          donateMsg: donateMsgPda,
+          systemProgram: anchor.web3.SystemProgram.programId
+        })
+        .rpc();
     } else {
+      const mintPubKey = new PublicKey(mint)
 
+      const donorTokenAccount = getAssociatedTokenAddressSync(mintPubKey, publicKey);
+      const [vaultTokenAccountPda, _vaultTokenAccountBump] = anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("spl-vault"), receiver.toBuffer(), mintPubKey.toBuffer()],
+        program.programId
+      );
+      const [userVaultDataPda, _userVaultDataBump] = anchor.web3.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from('user-vault'),
+          receiver.toBuffer(),
+          mintPubKey.toBuffer()
+        ], program.programId);
+
+      const [vaultAutherPda, _vaultAutherBump] = anchor.web3.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from('vault'),
+          receiver.toBuffer(),
+          mintPubKey.toBuffer()
+        ], program.programId)
+      const [donateMsgPda, _donateMsgBump] = anchor.web3.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("donor-msg"),
+          receiver.toBuffer(),
+          publicKey?.toBuffer(),
+          new anchor.BN(timestamp).toArrayLike(Buffer, "le", 8),
+        ],
+        program.programId
+      )
+
+      const amountNumber = parseFloat(amount);
+      const amountSmallUnit = new anchor.BN(Math.round(amountNumber * 10 ** decimals));
+
+      tx = await program.methods
+        .donateSpl(new anchor.BN(amountSmallUnit), name, message, new anchor.BN(timestamp))
+        .accountsPartial({
+          donor: publicKey,
+          receiver: receiver,
+          donorTokenAccount: donorTokenAccount,
+          vaultTokenAccount: vaultTokenAccountPda,
+          userVault: userVaultDataPda,
+          vault: vaultAutherPda,
+          donateMsg: donateMsgPda,
+          mint: mintPubKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+          tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+        })
+        .rpc()
     }
-    console.log({
-      mint,
-      symbol: mintRef.current.symbol,
-      name,
-      message,
-      amount
-    });
   };
 
   return (
