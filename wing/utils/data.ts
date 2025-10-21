@@ -103,3 +103,46 @@ export const navbarLink = [
     icon: Banknote
   }
 ];
+
+export const mint = [
+  {
+    symbol: 'SOL',
+    address: ''
+  },
+  {
+    symbol: 'USDC',
+    address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+  },
+  {
+    symbol: 'USDT',
+    address: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'
+  },
+  {
+    symbol: 'ORCA',
+    address: 'orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE'
+  },
+  {
+    symbol: 'JPL',
+    address: '27G8MtK7VtTcCHkpASjSDdkWWYfoqT6ggEuKidVJidD4'
+  },
+  {
+    symbol: 'TRUMP',
+    address: '6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN'
+  },
+  {
+    symbol: 'RAY',
+    address: ''
+  },
+  {
+    symbol: 'USDT',
+    address: ''
+  },
+  {
+    symbol: 'USDT',
+    address: ''
+  },
+  {
+    symbol: 'BONK',
+    address: ''
+  },
+]
