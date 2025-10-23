@@ -6,10 +6,10 @@ interface InputBoxProps {
 }
 
 function InputBox({ refrence, placeHolder, typeOfIn, defaultVal }: InputBoxProps) {
-  const commonClasses = "text-gray-300 px-4 py-3 min-w-72 rounded-md cursor-text border lg:w-full border-dashed border-zinc-700 outline-0";
+  const commonClasses = "text-gray-300 px-4 py-3 min-w-72 rounded-md cursor-text lg:w-full outline-0 border-dashed border-zinc-700 border";
 
   return (
-    <div className="relative w-fit lg:w-full">
+    <div className={`relative w-fit lg:w-full `}>
       {typeOfIn === 'textarea' ? (
         <textarea
           ref={refrence as (instance: HTMLTextAreaElement | null) => void}
@@ -28,8 +28,8 @@ function InputBox({ refrence, placeHolder, typeOfIn, defaultVal }: InputBoxProps
       )}
       <div className="absolute w-1.5 h-1.5 top-0 left-0 border-t border-l" />
       <div className="absolute w-1.5 h-1.5 top-0 right-0 border-t border-r" />
-      <div className="absolute w-1.5 h-1.5 bottom-0 left-0 border-b border-l" />
-      <div className="absolute w-1.5 h-1.5 bottom-0 right-0 border-b border-r" />
+      <div className={`absolute w-1.5 h-1.5 ${typeOfIn === 'textarea' ? 'bottom-1' : 'bottom-0'} left-0 border-b border-l`} />
+      <div className={`absolute w-1.5 h-1.5 ${typeOfIn === 'textarea' ? 'bottom-1' : 'bottom-0'} right-0 border-b border-r`} />
     </div>
   );
 }

@@ -45,7 +45,7 @@ function Profile({ address }: { address: string }) {
 
   if (isLoading) {
     return (
-      <div className="break-words border-b border-zinc-700   px-7 py-8 flex items-center h-32 justify-between row-span-1   ">
+      <div className="break-words w-full border-b border-zinc-700   px-7 items-center flex justify-between max-h-36">
         <div className="space-y-2">
           <p className="text-xl font-[650] flex gap-2 items-center">
             <CircleUser className="w-4.5 h-4.5 text-zinc-500 font-light" /> <span className="w-[100%] h-7 inline bg-zinc-800 rounded-xl" />
