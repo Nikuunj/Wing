@@ -110,10 +110,13 @@ function MessageOpen({ pubKey, closeFn }: { pubKey: string, closeFn: () => void 
             <MessageCircleIcon className="w-4 h-4 drop-shadow-[0px_0px_5px] drop-shadow-amber-200" />          {data?.message}
           </p>
           <p className="flex items-center gap-2">
-            <PiggyBank className="w-4 h-4 drop-shadow-[0px_0px_5px] drop-shadow-amber-200" />          {data?.amount.toString()}
+            <PiggyBank className="w-4 h-4 drop-shadow-[0px_0px_5px] drop-shadow-amber-200" />
+            {Number(data?.amount.toString()) / 1000_000_000}
           </p>
           <p className="flex items-center gap-2">
-            <Clock1Icon className="w-4 h-4 drop-shadow-[0px_0px_5px] drop-shadow-amber-200" /> {data?.ts.toString()}
+            <Clock1Icon className="w-4 h-4 drop-shadow-[0px_0px_5px] drop-shadow-amber-200" />
+            {new Date(Number(data?.ts.toString())).toString()}
+
           </p>
           <p className="flex gap-2 items-center break-words text-zinc-400">
             <KeySquareIcon className="w-4 h-4 drop-shadow-[0px_0px_5px] drop-shadow-amber-200" />{data?.senderPubkey.toString()}
