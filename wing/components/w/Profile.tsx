@@ -83,7 +83,7 @@ function Profile({ address }: { address: string }) {
           />
         </p>
       </div>
-      <div>
+      <div className="">
         <AboutPopover aboutText={data?.about ? data.about : "-"} />
       </div>
       {open && <Popup

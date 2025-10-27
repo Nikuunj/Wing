@@ -27,7 +27,7 @@ function AboutPopover({ aboutText }: { aboutText?: string }) {
 
   return (
     <div className="relative inline-block" ref={popoverRef}>
-      <button onClick={() => setShowPopover(prev => !prev)} className='outline-0' >
+      <button onClick={() => setShowPopover(prev => !prev)} className='outline-0 cursor-pointer' >
         {
           showPopover ? <SquareMinus className='text-zinc-500 w-5 h-5' /> :
             <SquarePlus className="text-zinc-500 w-5 h-5" />

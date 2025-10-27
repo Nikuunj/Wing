@@ -89,7 +89,7 @@ export const navbarLink = [
   },
   {
     title: 'Messages',
-    to: '',
+    to: '/messages',
     icon: MessageSquare
   },
   {
@@ -99,7 +99,7 @@ export const navbarLink = [
   },
   {
     title: 'Withdraw',
-    to: '',
+    to: '/withdraw',
     icon: Banknote
   }
 ];

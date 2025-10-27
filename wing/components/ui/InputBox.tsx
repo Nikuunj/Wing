@@ -28,8 +28,8 @@ function InputBox({ refrence, placeHolder, typeOfIn, defaultVal }: InputBoxProps
       )}
       <div className="absolute w-1.5 h-1.5 top-0 left-0 border-t border-l" />
       <div className="absolute w-1.5 h-1.5 top-0 right-0 border-t border-r" />
-      <div className={`absolute w-1.5 h-1.5 ${typeOfIn === 'textarea' ? 'bottom-1' : 'bottom-0'} left-0 border-b border-l`} />
-      <div className={`absolute w-1.5 h-1.5 ${typeOfIn === 'textarea' ? 'bottom-1' : 'bottom-0'} right-0 border-b border-r`} />
+      <div className={`absolute w-1.5 h-1.5 ${typeOfIn === 'textarea' ? 'bottom-1.5' : 'bottom-0'} left-0 border-b border-l`} />
+      <div className={`absolute w-1.5 h-1.5 ${typeOfIn === 'textarea' ? 'bottom-1.5' : 'bottom-0'} right-0 border-b border-r`} />
     </div>
   );
 }
