@@ -49,6 +49,7 @@ function MessagePage() {
     )
   }
   const render = data.map((val, idx) => <Message
+    key={idx + val.publicKey.toString()}
     name={val.account.senderName}
     address={val.account.senderPubkey.toString()}
     pubkey={val.publicKey.toString()}
