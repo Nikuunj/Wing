@@ -12,12 +12,13 @@ function MessagePage() {
   async function fetchData() {
     if (!connection || !program || !publicKey) return;
     let messages = null;
+    console.log(publicKey.toString());
 
     try {
       messages = await program.account.donationMessage.all([
         {
           memcmp: {
-            offset: 8,
+            offset: 40,
             bytes: publicKey.toBase58()
           }
         }
@@ -116,7 +117,6 @@ function MessageOpen({ pubKey, closeFn }: { pubKey: string, closeFn: () => void 
           <p className="flex items-center gap-2">
             <Clock1Icon className="w-4 h-4 drop-shadow-[0px_0px_5px] drop-shadow-amber-200" />
             {new Date(Number(data?.ts.toString())).toString()}
-
           </p>
           <p className="flex gap-2 items-center break-words text-zinc-400">
             <KeySquareIcon className="w-4 h-4 drop-shadow-[0px_0px_5px] drop-shadow-amber-200" />{data?.senderPubkey.toString()}
@@ -125,7 +125,6 @@ function MessageOpen({ pubKey, closeFn }: { pubKey: string, closeFn: () => void 
           <p className="flex items-center gap-2 text-zinc-400">
             <Box className="w-4 h-4 drop-shadow-[0px_0px_5px] drop-shadow-amber-200" /> {pubKey}
           </p>
-
         </div>
         <div className="absolute top-0 right-0 w-5 h-5 border-r border-t" />
         <div className="absolute top-0 left-0 w-5 h-5 border-l border-t" />

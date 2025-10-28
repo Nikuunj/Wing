@@ -7,8 +7,7 @@ import SelectMint from "./SelectMint";
 import { useProgram } from "@/hook/useProgram";
 import * as anchor from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { acceleratedValues } from "motion/react";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 
 function Tip({ address }: { address: string }) {
 
@@ -79,8 +78,25 @@ function Tip({ address }: { address: string }) {
         .rpc();
     } else {
       const mintPubKey = new PublicKey(mint)
+      const mintAccountInfo = await connection.getAccountInfo(mintPubKey);
+      if (!mintAccountInfo) {
+        alert('Invalid mint address');
+        return;
+      }
 
-      const donorTokenAccount = getAssociatedTokenAddressSync(mintPubKey, publicKey);
+      // Determine the token program based on the mint's owner
+      const TOKEN_PROGRAM_ID = mintAccountInfo.owner.toString() === TOKEN_2022_PROGRAM_ID.toString()
+        ? TOKEN_2022_PROGRAM_ID
+        : new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+
+      const donorTokenAccount = getAssociatedTokenAddressSync(mintPubKey, publicKey, true, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID);
+      console.log(donorTokenAccount.toString());
+
+      const donorTokenAccountInfo = await connection.getAccountInfo(donorTokenAccount);
+      if (!donorTokenAccountInfo) {
+        alert('You do not have a token account for this mint. Please ensure you hold this token before donating.');
+        return;
+      }
       const [vaultTokenAccountPda, _vaultTokenAccountBump] = anchor.web3.PublicKey.findProgramAddressSync(
         [Buffer.from("spl-vault"), receiver.toBuffer(), mintPubKey.toBuffer()],
         program.programId
@@ -123,7 +139,7 @@ function Tip({ address }: { address: string }) {
           donateMsg: donateMsgPda,
           mint: mintPubKey,
           systemProgram: anchor.web3.SystemProgram.programId,
-          tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+          tokenProgram: TOKEN_PROGRAM_ID,
         })
         .rpc()
     }

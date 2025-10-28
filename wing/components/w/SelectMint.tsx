@@ -42,7 +42,16 @@ function SelectMint({
         })
       );
 
-      return token2022Data;
+      const standardTokensData = standardTokens.value.map((acc) => {
+        const parsedInfo = acc.account.data.parsed.info;
+        return {
+          mint: new PublicKey(parsedInfo.mint),
+          symbol: parsedInfo.tokenAmount?.symbol, // Note: standard tokens might not have symbol in metadata
+          decimals: parsedInfo.tokenAmount?.decimals ?? 0
+        };
+      });
+
+      return [...token2022Data, ...standardTokensData];
     } catch (e) {
       console.error('Error fetching token accounts:', e);
       return [];
