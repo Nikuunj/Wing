@@ -77,15 +77,10 @@ export const navbarLink = [
     to: '/profile',
     icon: User
   },
-  // {
-  //   title: 'Dashboard',
-  //   to: '/dashboard',
-  //   icon: LayoutDashboard
-  // },
   {
-    title: 'History',
-    to: '/history',
-    icon: Clock
+    title: 'Dashboard',
+    to: '/dashboard',
+    icon: LayoutDashboard
   },
   {
     title: 'Messages',
@@ -94,7 +89,7 @@ export const navbarLink = [
   },
   {
     title: 'Send Assets',
-    to: '/send',
+    to: 'send',
     icon: Send
   },
   {

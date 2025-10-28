@@ -56,8 +56,13 @@ function MessagePage() {
     pubkey={val.publicKey.toString()}
   />)
   return (
-    <div className="flex flex-col items-center min-w-screen justify-center min-h-screen px-2 sm:px-10 space-y-10  break-words">
-      {render}
+    <div className="flex flex-col justify-center items-center  min-w-screen min-h-screen  space-y-12 px-2 sm:px-10  break-words">
+      <p className="text-4xl sm:text-8xl text-zinc-400 font-bold  w-full">
+        Messages
+      </p>
+      <div className="flex flex-wrap gap-5 w-fit ">
+        {render}
+      </div>
     </div>
   )
 }
@@ -66,7 +71,7 @@ function Message({ name, address, pubkey }: { name: string, address: string, pub
   const [open, setOpen] = useState(false);
   return (
     <BorderDiv borderSize="w-1 h-1" borderWidth={1}>
-      <div className="flex  max-w-2xl justify-between items-center w-full px-5 sm:px-9 py-10 bg-zinc-800/60 gap-2 sm:gap-11 " >
+      <div className="flex  max-w-2xl justify-between items-center w-full px-5 sm:px-9 py-10 bg-zinc-800/50 gap-2 sm:gap-11 " >
         <div className="space-y-2 ">
           <p className="text-lg font-semibold">{name}</p>
           <p className="text-zinc-400  break-words max-w-44 sm:max-w-full ">{address}</p>
