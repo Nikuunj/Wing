@@ -81,7 +81,8 @@ function Dashboard() {
       );
     } catch (err) {
       console.warn("No Spl vault found for user:", err);
-    } return { solVaultData, profile, splVaultData };
+    }
+    return { solVaultData, profile, splVaultData };
   }
   const { isError, isLoading, data, error } = useQuery({
     queryKey: ['data' + publicKey?.toString()],
@@ -125,9 +126,6 @@ function Dashboard() {
               </div>
             </BorderDiv>
           ))}
-          <p>
-
-          </p>
         </div>
       </div>
     </div>
