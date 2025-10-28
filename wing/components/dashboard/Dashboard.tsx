@@ -115,8 +115,8 @@ function Dashboard() {
             </div>
           </BorderDiv>
 
-          {data?.splVaultData?.map(val => (
-            <BorderDiv borderWidth={1} borderSize="w-3 h-3 border-b-blue-500 border-t-yellow-500 border-r-green-500 border-l-purple-500">
+          {data?.splVaultData?.map((val, idx) => (
+            <BorderDiv borderWidth={1} borderSize="w-3 h-3 border-b-blue-500 border-t-yellow-500 border-r-green-500 border-l-purple-500" key={idx}>
               <div className="px-10 py-20 bg-zinc-800/60">
                 <p className="text-3xl font-semibold">
                   {Number(val.account.amount) / 10 ** val.decimals}
