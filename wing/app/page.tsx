@@ -6,8 +6,8 @@ import Why from "@/components/home/Why";
 export default function Home() {
   return (
     <div>
-      <Hero />
       <div className="space-y-20 mb-20">
+        <Hero />
         <Why />
         <HowItWoork />
         <Feature />

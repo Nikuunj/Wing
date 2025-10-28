@@ -139,7 +139,7 @@ function Tip({ address }: { address: string }) {
           donateMsg: donateMsgPda,
           mint: mintPubKey,
           systemProgram: anchor.web3.SystemProgram.programId,
-          tokenProgram: TOKEN_PROGRAM_ID,
+          tokenProgram: TOKEN_2022_PROGRAM_ID,
         })
         .rpc()
     }

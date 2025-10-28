@@ -4,10 +4,9 @@ import InputBox from "../ui/InputBox";
 import { useProgram } from "@/hook/useProgram";
 import * as anchor from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { getMint, getTokenMetadata } from "@solana/spl-token";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync, getMint, getTokenMetadata, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, PiggyBank } from "lucide-react";
-import { number } from "motion/react";
+import { ChevronDown } from "lucide-react";
 
 function WithdrawForm() {
 
@@ -15,95 +14,115 @@ function WithdrawForm() {
 
   const reference = useRef<(HTMLInputElement | HTMLTextAreaElement | null)[]>(Array(1).fill(null));
   const mintRef = useRef({ value: "SOL", symbol: "SOL", decimals: 9, amount: 0 });
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async () => {
     const mint = mintRef.current.value;
-    const amount = reference.current[1]?.value;
+    const amount = reference.current[0]?.value;
     const decimals = mintRef.current.decimals;
+
     if (!publicKey) {
       alert('Please connect your wallet')
       return
     }
     if (!mint) {
-      alert('Mint Address Is not valid')
+      alert('Mint Address is not valid')
       return;
     }
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+      alert('Please enter a valid amount')
+      return;
+    }
+
+    // Check if amount exceeds balance
+    if (Number(amount) > mintRef.current.amount) {
+      alert('Insufficient balance')
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      let tx;
+
+      if (mint === "So11111111111111111111111111111111111111112") {
+        const [solVaultPda, _vaultBump] = anchor.web3.PublicKey.findProgramAddressSync(
+          [Buffer.from("sol-vault"), publicKey.toBuffer()],
+          program.programId)
+        const [solVaultDataPda, _vaultDataBump] = anchor.web3.PublicKey.findProgramAddressSync(
+          [Buffer.from("sol-vault-data"), publicKey.toBuffer()],
+          program.programId)
+
+        const sendAmount = Number(amount) * 10 ** decimals
+        tx = await program.methods
+          .claimSol(new anchor.BN(sendAmount))
+          .accountsPartial({
+            signer: publicKey,
+            solVault: solVaultPda,
+            solVaultData: solVaultDataPda,
+            systemProgram: anchor.web3.SystemProgram.programId
+          }).rpc()
+
+      } else {
+        const mintPubKey = new PublicKey(mint)
+        const mintAccountInfo = await connection.getAccountInfo(mintPubKey);
+        if (!mintAccountInfo) {
+          alert('Invalid mint address');
+          return;
+        }
+        const TOKEN_PROGRAM_ID = mintAccountInfo.owner.toString() === TOKEN_2022_PROGRAM_ID.toString()
+          ? TOKEN_2022_PROGRAM_ID
+          : new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+
+
+        const recieverTokenAccount = getAssociatedTokenAddressSync(mintPubKey, publicKey, true, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID);
+        const [vaultTokenAccountPda, _vaultTokenAccountBump] = anchor.web3.PublicKey.findProgramAddressSync(
+          [Buffer.from("spl-vault"), publicKey.toBuffer(), mintPubKey.toBuffer()],
+          program.programId
+        );
+        const [userVaultDataPda, _userVaultDataBump] = anchor.web3.PublicKey.findProgramAddressSync(
+          [
+            Buffer.from('user-vault'),
+            publicKey.toBuffer(),
+            mintPubKey.toBuffer()
+          ], program.programId);
+
+        const [vaultAutherPda, _vaultAutherBump] = anchor.web3.PublicKey.findProgramAddressSync(
+          [
+            Buffer.from('vault'),
+            publicKey.toBuffer(),
+            mintPubKey.toBuffer()
+          ], program.programId)
+
+        const sendAmount = Number(amount) * 10 ** decimals
+        tx = await program.methods
+          .clainSpl(new anchor.BN(sendAmount))
+          .accountsPartial({
+            signer: publicKey,
+            vaultTokenAccount: vaultTokenAccountPda,
+            signerTokenAccount: recieverTokenAccount,
+            userVault: userVaultDataPda,
+            vault: vaultAutherPda,
+            mint: mintPubKey,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID
+          }).rpc()
+      }
+
+      console.log('Transaction signature:', tx);
+
+      // Clear the input field
+      if (reference.current[0]) {
+        reference.current[0].value = '';
+      }
+
+    } catch (error) {
+      console.error('Transaction failed:', error);
+      alert(`Transaction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
-
-  const fetchBalance = async () => {
-    if (!connection || !program || !publicKey) return;
-
-    const [solVaultDataPda] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("sol-vault-data"), publicKey!.toBuffer()],
-      program.programId
-    )
-
-    let solVaultData = null;
-    let splVaultData = null;
-
-    try {
-      solVaultData = await program.account.solVaultData.fetch(solVaultDataPda);
-    } catch (err) {
-      console.warn("No solVaultData found for user:", err);
-    }
-
-    try {
-      const vaults = await program.account.userVault.all([
-        {
-          memcmp: {
-            offset: 8,
-            bytes: publicKey.toBase58(),
-          },
-        },
-      ]);
-
-      // enrich each vault entry with token metadata
-      splVaultData = await Promise.all(
-        vaults.map(async (val) => {
-          const mintPubkey = new PublicKey(val.account.mint);
-          let symbol = "Unknown";
-          let decimals = 0;
-
-          try {
-            const meta = await getTokenMetadata(connection, mintPubkey);
-            if (meta?.symbol) symbol = meta.symbol;
-          } catch (err) {
-            // Token-2022 may not have metadata extension, fallback to getMint
-            console.warn("Metadata not found, fallback to getMint:", err);
-          }
-
-          try {
-            const mintInfo = await getMint(connection, mintPubkey);
-            decimals = mintInfo.decimals;
-          } catch (err) {
-            console.warn("Failed to fetch mint info:", err);
-          }
-
-          return {
-            ...val,
-            symbol,
-            decimals,
-          };
-        })
-      );
-    } catch (err) {
-      console.warn("No Spl vault found for user:", err);
-    }
-
-    return { solVaultData, splVaultData };
-  }
-  const { isLoading, data } = useQuery({
-    queryKey: ['data' + publicKey?.toString()],
-    queryFn: fetchBalance
-  });
-
-  if (isLoading) {
-    return (
-      <div className="px-7 py-8 row-span-3  space-y-5 flex flex-col sm:flex-row lg:flex-col justify-center h-full ">
-        Loading...
-      </div>
-    )
-  }
 
   return (
     <div className="px-7 py-8 row-span-3  space-y-5 flex flex-col sm:flex-row lg:flex-col justify-center h-full ">
@@ -218,7 +237,7 @@ function SelectMint({
       mint: new PublicKey('So11111111111111111111111111111111111111112')
     })
 
-
+    handleSelect("So11111111111111111111111111111111111111112", "SOL", 9, Number(solVaultData?.amount.toString()) / 10 ** 9)
     return mergerAllPlainData
   }
 
