@@ -33,7 +33,8 @@ function Profile() {
   }
   const { isLoading, isError, data } = useQuery({
     queryKey: ['profile' + publicKey?.toString()],
-    queryFn: fetchProfile
+    queryFn: fetchProfile,
+    refetchOnWindowFocus: false
   })
 
   if (isLoading) {
