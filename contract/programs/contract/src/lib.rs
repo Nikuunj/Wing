@@ -141,6 +141,59 @@ pub mod contract {
         ctx.accounts.user_vault.amount -= amount;
         Ok(())
     }
+
+    pub fn send_sol(ctx: Context<SendSol>, amount: u64) -> Result<()> {
+        let balance = ctx.accounts.sol_vault_data.amount;
+
+        require!(amount <= balance, CustomError::InsufficientBalance);
+
+        let seed = ctx.accounts.signer.key();
+        let bump_seed = ctx.bumps.sol_vault;
+        let signer_seeds: &[&[&[u8]]] = &[&[b"sol-vault", seed.as_ref(), &[bump_seed]]];
+
+        let cpi_context = CpiContext::new_with_signer(
+            ctx.accounts.system_program.to_account_info(),
+            SolTransfer {
+                from: ctx.accounts.sol_vault.to_account_info(),
+                to: ctx.accounts.reciever.to_account_info(),
+            },
+            signer_seeds,
+        );
+        sol_transfer(cpi_context, amount)?;
+
+        ctx.accounts.sol_vault_data.amount -= amount;
+        msg!("Withdrawn {} lamports. Remaining: {}", amount, ctx.accounts.sol_vault_data.amount);
+ 
+        Ok(())
+    }
+
+    pub fn send_spl(ctx: Context<SendSpl>, amount: u64) -> Result<()> {
+        let balance = ctx.accounts.vault_token_account.amount;
+        require!(amount <= balance, CustomError::InsufficientBalance);
+
+        let bump = ctx.bumps.vault;
+        let signer_seed: &[&[&[u8]]] = &[&[
+            b"vault",
+            ctx.accounts.signer.key.as_ref(),
+            ctx.accounts.mint.to_account_info().key.as_ref(),
+            &[bump]
+        ]];
+
+        let cpi_accounts = Transfer {
+            from: ctx.accounts.vault_token_account.to_account_info(),
+            to: ctx.accounts.reciever_token_account.to_account_info(),
+            authority: ctx.accounts.vault.to_account_info()
+        };
+
+        let cpi_program = ctx.accounts.token_program.to_account_info();
+        let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seed);
+
+        transfer(cpi_ctx, amount)?;
+
+        ctx.accounts.user_vault.amount -= amount;
+    
+        Ok(())
+    }
 }
 
 #[account]
@@ -348,6 +401,73 @@ pub  struct  WithdrawSpl<'info> {
     )]
     pub signer_token_account: Account<'info, TokenAccount>,
     #[account(
+        mut,
+        seeds = [b"user-vault", signer.key().as_ref(), mint.key().as_ref()],
+        bump
+    )]
+    pub user_vault: Account<'info, UserVault>,
+
+    #[account(seeds = [b"vault", signer.key().as_ref(), mint.key().as_ref()], bump)]
+    /// CHECK: This is the PDA that acts as authority for `vault_token_account`. 
+    /// It is safe because we derive it with the same seeds and bump as used in `vault_token_account`. 
+    pub vault: UncheckedAccount<'info>,
+
+    pub mint: Account<'info, Mint>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+}
+
+#[derive(Accounts)]
+pub struct SendSol<'info> {
+    pub signer: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"sol-vault", signer.key().as_ref()],
+        bump
+    )]
+    pub sol_vault: SystemAccount<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"sol-vault-data", signer.key().as_ref()],
+        bump
+    )]
+    pub sol_vault_data: Account<'info, SolVaultData>,
+
+   #[account(mut)] 
+    pub reciever: SystemAccount<'info>,
+
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct  SendSpl<'info> {
+    
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    #[account(mut)]
+    pub reciever: SystemAccount<'info>,
+
+    #[account(
+        init_if_needed,
+        payer = signer,
+        associated_token::mint = mint,
+        associated_token::authority = reciever,
+    )]
+    pub reciever_token_account: Account<'info, TokenAccount>,
+    
+    #[account(mut, 
+        seeds = [b"spl-vault", signer.key().as_ref(), mint.key().as_ref()], 
+        bump,
+        token::mint = mint,
+        token::authority = vault
+    )]
+    pub vault_token_account: Account<'info, TokenAccount>,
+
+   #[account(
         mut,
         seeds = [b"user-vault", signer.key().as_ref(), mint.key().as_ref()],
         bump
