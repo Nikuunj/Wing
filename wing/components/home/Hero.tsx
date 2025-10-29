@@ -8,9 +8,11 @@ import ConnectBtn from "../ui/ConnectBtn";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { HoverBorderGradient } from "../ui/HoverBorderGradient";
 import heroImg from '@/public/hero.png';
+import { useRouter } from "next/navigation";
 
 function Hero() {
   const wallet = useWallet();
+  const router = useRouter()
   return (
     <div className="w-full relative">
       <Meteors number={15} />
@@ -38,6 +40,7 @@ function Hero() {
               containerClassName="rounded-full"
               as={'button'}
               className="text-white flex items-center space-x-2"
+              onClick={() => router.push('/profile')}
             >
               <Image src={logo} className="w-6 h-6" alt="logo" />
               <span className="font-semibold">
