@@ -7,6 +7,7 @@ import { PublicKey } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync, getMint, getTokenMetadata, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown } from "lucide-react";
+import BorderDiv from "../ui/BorderDiv";
 
 function WithdrawForm() {
 
@@ -125,7 +126,7 @@ function WithdrawForm() {
   };
 
   return (
-    <div className="px-7 py-8 row-span-3  space-y-5 flex flex-col sm:flex-row lg:flex-col justify-center h-full ">
+    <div className="px-7 py-8 row-span-3  space-y-5 flex flex-col sm:flex-row lg:flex-col justify-center h-full relative">
       <div className="space-y-7 flex flex-col justify-center items-center sm:items-start w-full">
         <h1 className="text-4xl sm:text-5xl font-bold">Withdraw Wings</h1>
         <div className="space-y-7 flex flex-col items-center w-full">
@@ -149,7 +150,18 @@ function WithdrawForm() {
           </div>
         </div>
       </div>
-    </div>
+
+      {isLoading && (
+        <div className="absolute top-1/2 left-2/5 animate-pulse">
+          <BorderDiv className="w-fit px-4 py-2 bg-zinc-900" borderWidth={1} borderSize="w-2 h-2 border-b-blue-500 border-t-yellow-500 border-r-green-500 border-l-purple-500 ">
+            <p>
+              Withdraw...
+            </p>
+          </BorderDiv>
+        </div>
+      )
+      }
+    </div >
   );
 }
 

@@ -89,7 +89,7 @@ export const navbarLink = [
   },
   {
     title: 'Send Assets',
-    to: 'send',
+    to: '/send',
     icon: Send
   },
   {

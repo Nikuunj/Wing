@@ -106,6 +106,12 @@ function Dashboard() {
         <p className="text-4xl font-bold ">
           {data?.profile?.name}
         </p>
+
+        <BorderDiv className="w-fit px-4 py-2" borderWidth={1} borderSize="w-2 h-2 border-b-blue-500 border-t-yellow-500 border-r-green-500 border-l-purple-500 ">
+          <p className=" w-fit items-center text-xl">
+            Rewards
+          </p>
+        </BorderDiv>
         <div className="flex gap-5 flex-wrap  max-w-2xl">
           <BorderDiv borderWidth={1} borderSize="w-3 h-3 border-b-blue-500 border-t-yellow-500 border-r-green-500 border-l-purple-500">
             <div className="px-10 py-20 bg-zinc-800/60">
